@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, user-scalable=no" />
+  <style>
+    canvas {
+      border: 3px solid black;
+      width: 100%;
+      background-image: url("https://cdn.pixabay.com/photo/2017/08/30/01/05/milky-way-2695569_960_720.jpg");
+      background-repeat: no-repeat;
+      background-size: 1366px 700px;
+    }
+    h1{
+    	color:blue;
+    	text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Javascript Game</h1>
+  <h3>Left-Click on Play Area to move the player A. Try to reach the goal without being caught by the enemies in RED.</h3>
+  <canvas id="mycanvas" width="800" height="338" ></canvas>
+ 
+  <script>
+    window.addEventListener("load",function() {
+      var GAME_WIDTH = 800;
+      var GAME_HEIGHT = 338;
+      var gameLive = true;
+      var level = 1;
+      var life = 5;
+      var color = "#"+((1<<24)*Math.random()|0).toString(16);
+      var enemies = [{x: 100, y: 100, speedY: 1, w: 25, h: 25}, { x: 250, y: 0,speedY: 2,w: 25,h: 25},{x: 360, y: 100,speedY: 2, w: 25, h: 25},{ x: 490,y: 100,speedY:-2,w: 25,h: 25},{ x: 660,y:220,speedY: 1,w: 25,h: 25}];
+      var player = {x: 10,y: 169,speedX: 2, isMoving: false,w: 25,h: 25};
+      var goal = {x: 750,y: 169, w: 45, h: 25}
+   
+
+        // var closeOnWidth = Math.abs(rect1.x - rect2.x) <= Math.max(rect1.w, rect2.w);
+        // var closeOnHeight = Math.abs(rect1.y - rect2.y) <= Math.max(rect1.h, rect2.h);
+        // return closeOnWidth && closeOnHeight;
+
+      var movePlayer = function() {
+        player.isMoving = true;
+      }
+
+      var stopPlayer = function() {
+        player.isMoving = false;
+      }
+
+      var canvas = document.getElementById("mycanvas");
+      var view = canvas.getContext("2d");
+      canvas.addEventListener('mousedown', movePlayer);
+      canvas.addEventListener('mouseup', stopPlayer);   
+      canvas.addEventListener('touchstart', movePlayer);
+      canvas.addEventListener('touchend', stopPlayer);   
+      var update = function() {
+        if(checkCollision(player, goal)) {
+          alert('You Won level '+level+'!!');
+          level += 1;
+          life += 1;
+          player.speedX += 1;
+          player.x = 10;
+          player.y = 169;
+          player.isMoving = false;
+          
+          for(var i = 0; i < enemies.length; i++){
+              if(enemies[i].speedY > 1){
+                enemies[i].speedY += 1 ;
+              }
+              else{
+                  enemies[i].speedY -= 1 ;
+              }
+          }
+        }
+        if(player.isMoving) {
+          player.x+=player.speedX;
+        }
+        var i = 0;
+        var n = enemies.length;
+        
+        enemies.forEach(function(element, index){
+          if(checkCollision(player, element)) {
+            if(life === 0){     
+                alert('Game Over!!');              
+                for(var i = 0; i < enemies.length; i++){                  
+                    if(enemies[i].speedY > 1){
+                   enemies[i].speedY -= (level - 1) ;
+                    }        
+                    else{
+                        enemies[i].speedY += (level - 1) ;
+                    }
+                }
+                level = 1;
+                life = 6;
+                player.speedX = 2;
+                color ="#"+((1<<24)*Math.random()|0).toString(16);
+            }
+            
+            if(life > 0){
+                
+                life -= 1 ;
+                color ="#"+((1<<24)*Math.random()|0).toString(16);
+            }
+            
+            player.x = 10; 
+            player.y = 169;
+            player.isMoving = false;
+          }
+          element.y += element.speedY;
+          if(element.y <= 10) {
+            element.y = 10;
+            element.speedY *= -1;
+          }
+          else if(element.y >= GAME_HEIGHT - 30) {
+            element.y = GAME_HEIGHT - 30;
+            element.speedY *= -1;
+          }
+        });
+      };
+      var draw = function() {
+        view.clearRect(0,0,750,338);        
+        view.font = "15px Verdana";
+        view.fillStyle = "rgb(255,255,255)";
+        view.fillText("Level : " + level , 10, 15);
+        view.fillText("Life : " + life , 10, 35);
+        view.fillText("Speed : " + player.speedX , 10, 55);
+        view.fillStyle = color;
+        view.fillRect(player.x, player.y, 25, 25);
+        view.fillStyle="rgb(255,255,255)";
+        view.fillText("A",player.x+7,player.y+18);
+        view.fillStyle = "rgb(255,0,0)";
+        enemies.forEach(function(element, index){
+          view.fillRect(element.x, element.y, element.w, element.h);
+        });
+        view.fillStyle = "rgb(0,255,120)";
+        view.fillRect(goal.x, goal.y, goal.w, goal.h);
+        view.fillStyle = "rgb(0,0,0)";
+        view.fillText("Goal", goal.x + 6, goal.y + 18);
+      };
+      var step = function() {
+
+        update();
+        draw();
+        if(gameLive) {
+          window.requestAnimationFrame(step); 
+        }     
+      };
+      var checkCollision = function(rect1, rect2) {
+      	if (rect1.x < rect2.x + rect2.w && rect1.x + rect1.w > rect2.x && rect1.y < rect2.y + rect2.h &&rect1.y + rect1.h > rect2.y) {
+			return true;
+		}
+
+        // var closeOnWidth = Math.abs(rect1.x - rect2.x) <= Math.max(rect1.w, rect2.w);
+        // var closeOnHeight = Math.abs(rect1.y - rect2.y) <= Math.max(rect1.h, rect2.h);
+        // return closeOnWidth && closeOnHeight;
+      }
+     step();
+    });
+  </script>
+</body>
+</html>
